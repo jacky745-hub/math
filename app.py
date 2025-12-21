@@ -40,7 +40,7 @@ def _require_admin() -> bool:
 
 def student_page():
     st.subheader("學生上傳與逐步提示")
-    st.caption("建議：題目文字請盡量貼上（降低 OCR 雜訊），再用圖片/PDF 當作佐證。")
+    st.caption("建議：題目文字請盡量貼上（降低 OCR 雜訊）。你也可以上傳圖片/PDF，我會嘗試用 OCR 把步驟抓出來。")
 
     with st.form("submit_form"):
         col1, col2, col3 = st.columns(3)
@@ -60,6 +60,7 @@ def student_page():
         final_answer_text = st.text_input("你的最後答案（可選）", value="", placeholder="例：x=2")
 
         upload = st.file_uploader("上傳圖片或 PDF（可選：單題或整份作業）", type=["png", "jpg", "jpeg", "webp", "pdf"])
+        use_ocr_as_work = st.checkbox("若有 OCR 文字，優先用它當作『解題過程』", value=False)
 
         submitted = st.form_submit_button("送出並請系統分析")
 
@@ -75,13 +76,14 @@ def student_page():
 
     upload_path, upload_kind = _save_upload(upload)
     extracted_text = extract.maybe_extract_upload_text(Path(upload_path) if upload_path else None, upload_kind)
+    effective_work_text = (extracted_text if (use_ocr_as_work and extracted_text) else (work_text.strip() or None))
 
     sub = SubmissionInput(
         student_id=student_id.strip(),
         grade=grade or None,
         assignment_id=assignment_id.strip() or None,
         problem_text=problem_text.strip(),
-        work_text=work_text.strip() or None,
+        work_text=effective_work_text,
         final_answer_text=final_answer_text.strip() or None,
         upload_path=upload_path,
         upload_kind=upload_kind,
@@ -99,10 +101,25 @@ def student_page():
     st.success(f"已收到！提交編號：{submission_id}")
     st.write(result.short_feedback)
 
+    if extracted_text:
+        with st.expander("OCR/擷取到的文字（可用來檢查 OCR 有沒有抓錯）", expanded=False):
+            st.text(extracted_text)
+
+    if result.first_wrong_step_index is not None and result.first_wrong_step_text:
+        st.warning(f"我定位到第一個可能出錯的步驟：第 {result.first_wrong_step_index + 1} 行：{result.first_wrong_step_text}")
+
     if result.issues:
         with st.expander("我觀察到的可能錯因（先給你 1–2 個最關鍵的）", expanded=False):
             for issue in result.issues:
                 st.markdown(f"- **{issue.misconception}**\n  - 觀察：{issue.evidence}")
+
+    step_info = (result.debug or {}).get("step_check") if hasattr(result, "debug") else None
+    if step_info and step_info.get("steps"):
+        with st.expander("逐行等價檢查（幫你找到『從哪一步開始偏掉』）", expanded=False):
+            for s in step_info["steps"]:
+                ok = s.get("is_equivalent_to_previous")
+                prefix = "✅" if ok is True else ("⚠️" if ok is False else "•")
+                st.write(f"{prefix} 第 {int(s['index']) + 1} 行：{s['line']}  — {s['note']}")
 
     st.divider()
     st.subheader("逐步提示（你決定要到哪一層）")

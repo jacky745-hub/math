@@ -11,9 +11,23 @@
 
 > 注意：目前的「對錯判斷」與「錯因偵測」是 MVP 的規則式/符號運算版本，已預留後續接入更強分析（例如 LLM、OCR、題型分類器）的擴充點。
 
-## 執行方式（本機）
+## 網頁部署方式（建議：Docker）
 
-在 workspace 根目錄：
+你要的是「不是本機執行、而是網頁版本 + 必須有資料庫」：此專案已提供 Docker 版，會在伺服器上跑成網站，並用 **SQLite 資料庫檔 + Volume** 做持久化（等同有 DB）。
+
+在伺服器上（或任何有 Docker 的環境）：
+
+```bash
+docker compose up --build
+```
+
+然後用瀏覽器開 `http://<server-ip>:8080`
+
+> 資料會存在 `./data/`（含 `mathcoach.sqlite3` 與上傳檔），重啟容器不會消失。
+
+## （仍可選）本機執行
+
+在專案根目錄：
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -40,9 +54,9 @@ export MATHCOACH_ADMIN_PASSWORD='your-password'
 
 ## 目前限制（MVP）
 
-- 圖片未做 OCR（可在後續加入 Tesseract/EasyOCR）
+- 圖片/手寫 OCR：已加入 Tesseract（實務上仍可能因字跡/光線而需學生校正）
 - 對錯判斷以「可解析的方程式 + 有填最後答案」為主
-- 錯因偵測目前涵蓋：分配律、移項概念、負號括號等常見型態（可持續擴充）
+- 錯因偵測：加入「逐行等價檢查」，可定位第一個偏掉的步驟；並先涵蓋移項/分配律/粗心等常見類別（可持續擴充）
 
 ## 下一步可擴充
 

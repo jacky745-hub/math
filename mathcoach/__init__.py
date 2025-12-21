@@ -3,5 +3,7 @@ __all__ = [
     "db",
     "extract",
     "models",
+    "ocr",
     "scaffolding",
+    "stepcheck",
 ]

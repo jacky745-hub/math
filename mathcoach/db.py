@@ -52,7 +52,9 @@ def init_db(db_path: Path) -> None:
               upload_kind TEXT NOT NULL,
               extracted_text TEXT,
               is_correct INTEGER,
-              short_feedback TEXT
+              short_feedback TEXT,
+              first_wrong_step_index INTEGER,
+              first_wrong_step_text TEXT
             );
 
             CREATE TABLE IF NOT EXISTS issues (
@@ -81,6 +83,17 @@ def init_db(db_path: Path) -> None:
             );
             """
         )
+
+        # Lightweight migration for existing DBs (if table existed before)
+        _ensure_column(con, "submissions", "first_wrong_step_index", "INTEGER")
+        _ensure_column(con, "submissions", "first_wrong_step_text", "TEXT")
+
+
+def _ensure_column(con: sqlite3.Connection, table: str, column: str, col_type: str) -> None:
+    cols = [r["name"] for r in con.execute(f"PRAGMA table_info({table})").fetchall()]
+    if column in cols:
+        return
+    con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
 
 
 def insert_submission(db_path: Path, sub: SubmissionInput) -> int:
@@ -128,13 +141,18 @@ def save_analysis(db_path: Path, submission_id: int, result: AnalysisResult) -> 
         con.execute(
             """
             UPDATE submissions
-            SET is_correct = :is_correct, short_feedback = :short_feedback
+            SET is_correct = :is_correct,
+                short_feedback = :short_feedback,
+                first_wrong_step_index = :first_wrong_step_index,
+                first_wrong_step_text = :first_wrong_step_text
             WHERE id = :id
             """,
             {
                 "id": submission_id,
                 "is_correct": is_correct_int,
                 "short_feedback": result.short_feedback,
+                "first_wrong_step_index": result.first_wrong_step_index,
+                "first_wrong_step_text": result.first_wrong_step_text,
             },
         )
 
@@ -216,6 +234,8 @@ def export_errors_csv(db_path: Path) -> str:
               s.problem_text,
               s.final_answer_text,
               s.is_correct,
+              s.first_wrong_step_index,
+              s.first_wrong_step_text,
               COALESCE(h.max_hint_level, 0) AS max_hint_level,
               COALESCE(h.hint_events, 0) AS hint_events,
               i.tag,
@@ -240,6 +260,8 @@ def export_errors_csv(db_path: Path) -> str:
             "problem_text",
             "final_answer_text",
             "is_correct",
+            "first_wrong_step_index",
+            "first_wrong_step_text",
             "max_hint_level",
             "hint_events",
             "tag",
@@ -258,6 +280,8 @@ def export_errors_csv(db_path: Path) -> str:
                 r["problem_text"],
                 r["final_answer_text"],
                 r["is_correct"],
+                r["first_wrong_step_index"],
+                r["first_wrong_step_text"],
                 r["max_hint_level"],
                 r["hint_events"],
                 r["tag"],
@@ -281,6 +305,8 @@ def export_submissions_csv(db_path: Path) -> str:
               assignment_id,
               is_correct,
               short_feedback,
+              first_wrong_step_index,
+              first_wrong_step_text,
               upload_kind,
               upload_path
             FROM submissions
@@ -299,6 +325,8 @@ def export_submissions_csv(db_path: Path) -> str:
             "assignment_id",
             "is_correct",
             "short_feedback",
+            "first_wrong_step_index",
+            "first_wrong_step_text",
             "upload_kind",
             "upload_path",
         ]
@@ -313,6 +341,8 @@ def export_submissions_csv(db_path: Path) -> str:
                 r["assignment_id"],
                 r["is_correct"],
                 r["short_feedback"],
+                r["first_wrong_step_index"],
+                r["first_wrong_step_text"],
                 r["upload_kind"],
                 r["upload_path"],
             ]

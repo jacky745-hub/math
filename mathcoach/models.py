@@ -66,6 +66,8 @@ class AnalysisResult:
     issues: list[DetectedIssue]
     hint_path: list[ScaffoldTurn]
     debug: dict[str, Any]
+    first_wrong_step_index: int | None = None
+    first_wrong_step_text: str | None = None
 
 
 ExportFormat = Literal["errors_csv", "submissions_csv"]

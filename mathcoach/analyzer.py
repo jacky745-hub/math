@@ -5,9 +5,10 @@ from typing import Optional
 
 import sympy as sp
 
-from .extract import normalize_math_text
+from .textnorm import normalize_math_text
 from .models import AnalysisResult, DetectedIssue, ErrorTag, SubmissionInput
 from .scaffolding import build_scaffold
+from .stepcheck import check_steps
 
 
 _X = sp.Symbol("x")
@@ -145,10 +146,25 @@ def analyze(sub: SubmissionInput) -> AnalysisResult:
     eq = _parse_equation(eq_text) if eq_text else None
     ans = _parse_final_answer(sub.final_answer_text or "")
 
+    step_summary = check_steps(work) if work else None
+
     debug: dict[str, object] = {
         "equation_text": eq_text,
         "parsed_equation": str(eq) if eq is not None else None,
         "parsed_answer": str(ans) if ans is not None else None,
+        "step_check": {
+            "first_wrong_index": getattr(step_summary, "first_wrong_index", None),
+            "first_wrong_line": getattr(step_summary, "first_wrong_line", None),
+            "steps": [
+                {
+                    "index": s.index,
+                    "line": s.line,
+                    "is_equivalent_to_previous": s.is_equivalent_to_previous,
+                    "note": s.note,
+                }
+                for s in (step_summary.steps if step_summary else [])
+            ],
+        },
     }
 
     is_correct: bool | None = None
@@ -166,6 +182,14 @@ def analyze(sub: SubmissionInput) -> AnalysisResult:
             issue = None
         if issue:
             issues.append(issue)
+
+    # Step-based diagnosis: if we can locate first wrong step, prioritize it (low-noise, high-signal).
+    first_wrong_step_index = None
+    first_wrong_step_text = None
+    if step_summary and step_summary.first_wrong_index is not None and step_summary.issue is not None:
+        first_wrong_step_index = int(step_summary.first_wrong_index)
+        first_wrong_step_text = step_summary.first_wrong_line
+        issues = [step_summary.issue] + [i for i in issues if i.tag != step_summary.issue.tag]
 
     # Try to verify correctness when the problem is a solvable equation and the student provided an answer.
     if eq is not None and ans is not None:
@@ -186,7 +210,10 @@ def analyze(sub: SubmissionInput) -> AnalysisResult:
     if is_correct is True:
         short = "答案看起來是對的，我們把方法整理成可複製的步驟。"
     elif is_correct is False:
-        short = "我覺得答案可能有一點偏掉；我們用『一步一步檢查』把錯抓出來。"
+        if first_wrong_step_index is not None and first_wrong_step_text:
+            short = f"我找到你『第一次偏掉』的那一步（第 {first_wrong_step_index + 1} 行附近）。我們從那一行開始修正就好。"
+        else:
+            short = "我覺得答案可能有一點偏掉；我們用『一步一步檢查』把錯抓出來。"
     else:
         short = "我先不急著判對錯；我會用逐步提示陪你把思路走順。"
 
@@ -197,5 +224,7 @@ def analyze(sub: SubmissionInput) -> AnalysisResult:
         issues=issues,
         hint_path=hint_path,
         debug=debug,
+        first_wrong_step_index=first_wrong_step_index,
+        first_wrong_step_text=first_wrong_step_text,
     )
 

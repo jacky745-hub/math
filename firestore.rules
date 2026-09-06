@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 即時文字雲：任何人可讀寫（僅適合課堂 demo，正式服務要改成登入或班級碼限制）
+    match /wordcloud_words/{document} {
+      allow read, write: if true;
+    }
+
+    // 其他集合預設禁止存取
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

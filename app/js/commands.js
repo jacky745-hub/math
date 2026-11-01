@@ -66,9 +66,10 @@
     text = String(text || "").trim();
     if (!text) return;
     XA.log("me", text);
-    for (var i = 0; i < INTENTS.length; i++) {
-      var m = text.match(INTENTS[i].re);
-      if (m) { try { INTENTS[i].run(m, text); } catch (e) { console.error(e); XA.say("這個動作沒有成功：" + e.message); } return; }
+    var all = (XA.preIntents || []).concat(INTENTS);
+    for (var i = 0; i < all.length; i++) {
+      var m = text.match(all[i].re);
+      if (m) { try { all[i].run(m, text); } catch (e) { console.error(e); XA.say("這個動作沒有成功：" + e.message); } return; }
     }
     if (!XA.hasLLM()) {
       XA.say("我還不確定要做什麼。連上語言模型後我能自由對話；現在可以說「你會什麼」看看我會的指令。");

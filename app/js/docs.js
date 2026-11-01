@@ -11,8 +11,8 @@
   /* ---------- reading ---------- */
   function paraText(p) { return Array.from(p.getElementsByTagNameNS(W, "t")).map(function (t) { return t.textContent; }).join(""); }
 
-  function loadDocx(file) {
-    D.name = file.name;
+  function loadDocx(file, localPath) {
+    D.name = file.name; D.localPath = localPath || null;
     return JSZip.loadAsync(file).then(function (zip) {
       D.zip = zip;
       var f = zip.file("word/document.xml");
@@ -27,7 +27,7 @@
   }
 
   function loadText(text) {
-    D.name = "小安_練習卷.docx"; D.zip = null; D.xml = null;
+    D.name = "小安_練習卷.docx"; D.zip = null; D.xml = null; D.localPath = null;
     D.paras = text.split(/\r?\n/).map(function (t) { return { node: null, text: t }; });
     findQuestions();
   }
@@ -150,7 +150,7 @@
     var hasWork = D.questions.some(function (q) { return q.solution; }) || D.extra.length;
     if (!hasWork) { XA.toast("還沒有要寫入的解答。先按「小安解題」。"); return; }
     var outName = D.name.replace(/\.docx$/i, "") + "_小安解題.docx";
-    XA.confirm("把解答寫入 Word 並存檔？", "會另存成新檔「" + outName + "」，原檔不會被覆蓋。共 " + D.questions.filter(function (q) { return q.solution; }).length + " 題解答、" + D.extra.length + " 題類題。", "寫入並下載").then(function (yes) {
+    XA.confirm("把解答寫入 Word 並存檔？", "會另存成新檔「" + outName + "」" + (D.localPath && XA.local ? "，放在原檔同一個資料夾" : "") + "，原檔不會被覆蓋。共 " + D.questions.filter(function (q) { return q.solution && q.source !== "未作答"; }).length + " 題解答、" + D.extra.length + " 題類題。", "寫入並下載").then(function (yes) {
       if (!yes) return;
       var pkg = D.zip ? { zip: D.zip, xml: D.xml.cloneNode(true) } : buildNewDocx();
       var xml = pkg.xml;
@@ -171,6 +171,12 @@
       }
       pkg.zip.file("word/document.xml", new XMLSerializer().serializeToString(xml));
       return pkg.zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }).then(function (blob) {
+        if (D.localPath && XA.local) {
+          return XA.blobToBase64(blob).then(function (b64) {
+            return XA.localCall("file_write", { path: D.localPath, name: outName, data: b64 });
+          }).then(function (r) { XA.say("已存到「" + r.path + "」。"); })
+            .catch(function (e) { XA.toast("本機存檔失敗：" + e.message + "，改為下載。"); XA.download(outName, blob); });
+        }
         XA.download(outName, blob); XA.log("sys", "已存檔：" + outName);
       });
     });
@@ -195,6 +201,9 @@
   function render() { if (pageBox && pageBox.isConnected) XA.clear(pageBox).appendChild(pageEl()); else XA.render(); }
 
   XA.docsSolve = solveAll;
+  XA.docsLoad = function (file, localPath) {
+    return loadDocx(file, localPath).then(function () { XA.go("docs"); XA.say("讀到「" + file.name + "」，找到 " + D.questions.length + " 題。"); });
+  };
   XA.views.docs = function (root) {
     root.appendChild(h("h2", { class: "view-title" }, "文件共編"));
     root.appendChild(h("p", { class: "view-sub" }, "讀取 Word 檔中的題目，把詳細解題過程與類題寫回文件；每題都附自我檢查。檔案只在你的瀏覽器裡處理。"));

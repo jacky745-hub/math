@@ -243,7 +243,9 @@
         q.type !== "open" ? h("ol", { style: { margin: 0, paddingLeft: "0", listStyle: "none", font: "500 18px/30px var(--font-sans)" } }, q.options.map(function (o) { return h("li", null, o.label + ". " + o.text); })) : null,
         h("div", null, h("div", { class: "xa-progress", role: "progressbar", "aria-label": "作答進度" }, bar), count)),
       h("a", { class: "xa-qr", href: url, target: "_blank", rel: "noopener", title: "也可以點這裡開學生作答頁" }, qrSvg(url)));
+    var localOnly = /^(127\.0\.0\.1|localhost)$/.test(location.hostname) && !XA.settings.baseUrl;
     var stageEl = h("div", { class: "stage", id: "quiz-stage" },
+      localOnly ? h("p", { class: "xa-caption", style: { marginBottom: "8px" } }, "提醒：這個 QR Code 指向本機網址，學生手機連不到。請到「設定與記憶」填入學生作答頁網址（例如 GitHub Pages）。") : null,
       h("div", { class: "stage-status" }, XA.statusEl()),
       h("button", { class: "iconbtn stage-exit", onclick: function () { stageEl.classList.remove("projecting"); } }, "結束投影 Esc"),
       card, results);
@@ -306,6 +308,12 @@
     XA.download("xiaoan-" + state.session.code + ".csv", new Blob(["﻿" + csv], { type: "text/csv" }));
   }
 
+  /* R code for local execution: draws to the PNG path the helper provides as out_png */
+  function localR(st, q) {
+    if (q.type === "open") return "if (!requireNamespace(\"wordcloud\", quietly = TRUE)) install.packages(\"wordcloud\", repos = \"https://cloud.r-project.org\")\nlibrary(wordcloud)\npng(out_png, width = 900, height = 600)\nwordcloud(c(" + st.words.map(function (w) { return JSON.stringify(w.text); }).join(", ") + "), c(" + st.words.map(function (w) { return w.weight; }).join(", ") + "), min.freq = 1, colors = c(\"#56635c\", \"#1c2621\", \"#0d7a6a\"), random.order = FALSE)\ninvisible(dev.off())\ncat(\"文字雲完成\\n\")";
+    return "counts <- c(" + q.options.map(function (o) { return o.label + " = " + st.counts[o.label]; }).join(", ") + ")\nprop <- round(prop.table(counts) * 100)\nprint(prop)\npng(out_png, width = 900, height = 600)\nbarplot(prop, col = c(" + q.options.map(function (o) { return o.correct ? "\"#2a66ad\"" : (st.topWrong && st.topWrong.label === o.label ? "\"#b54814\"" : "\"#8c958f\""); }).join(", ") + "), ylab = \"%\", main = \"" + st.rate + "%\")\ninvisible(dev.off())";
+  }
+
   function showR(st, q) {
     var code = q.type === "open"
       ? "# 文字雲（R）\ninstall.packages(c(\"wordcloud2\"))\nlibrary(wordcloud2)\nfreq <- data.frame(word = c(" + st.words.map(function (w) { return JSON.stringify(w.text); }).join(", ") + "),\n                   freq = c(" + st.words.map(function (w) { return w.weight; }).join(", ") + "))\nwordcloud2(freq, fontFamily = \"Noto Sans TC\", color = \"#0d7a6a\")"
@@ -313,6 +321,11 @@
     var scrim = h("div", { class: "scrim", onclick: function (e) { if (e.target === scrim) scrim.remove(); } },
       h("div", { class: "panel", style: { maxWidth: "640px", width: "100%" } }, h("h3", null, "用 R 重現這份統計"),
         h("pre", { class: "code" }, code),
+        XA.local && XA.local.r ? h("div", { class: "toolbar" }, h("button", { class: "xa-btn xa-btn-secondary", onclick: function (e) {
+          var out = e.currentTarget.parentNode.nextSibling;
+          XA.localRunR(localR(st, q), out);
+        } }, "在這台電腦執行 R")) : null,
+        h("div"),
         h("div", { class: "toolbar" }, h("button", { class: "xa-btn xa-btn-primary", onclick: function () { navigator.clipboard && navigator.clipboard.writeText(code); XA.toast("已複製 R 程式碼"); } }, "複製"),
           h("button", { class: "xa-btn xa-btn-secondary", onclick: function () { scrim.remove(); } }, "關閉"))));
     document.body.appendChild(scrim);

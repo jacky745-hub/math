@@ -15,6 +15,8 @@
    ```
 
    然後開啟 http://localhost:8000
+
+   **Windows 電腦**：雙擊 `windows\啟動小安.bat`，啟動本機版，可直接控制 PowerPoint、存取本機 Word、開啟 Spotify App、執行 R。說明見 [`windows/README.md`](windows/README.md)。
 2. 右側和小安對話：直接打字，或按「說話」／空白鍵用說的。說「你會什麼」可以看全部指令。
 
 ## 功能對照（skills.md）
@@ -44,8 +46,8 @@
 ## 瀏覽器版的限制
 
 - 語音輸入需要 Chrome 或 Edge；朗讀使用系統內建的中文語音。
-- 地圖、日曆、郵件、Spotify 是在新分頁開啟，由老師完成最後一步；直接控制 Mac 本機程式需要另做本機版。
-- 統計在瀏覽器內計算，並提供對應的 R 程式碼，沒有在網頁中執行 R。
+- 網頁版：地圖、日曆、郵件、Spotify 是在新分頁開啟，由老師完成最後一步；控制 PowerPoint、存取本機檔案、執行 R 需要 Windows 本機版。
+- Mac 本機版尚未製作。
 - 台語語音模型尚未加入。
 
 ## 檔案
@@ -58,4 +60,8 @@ app/
   js/             core（語音、確認、隱私、記憶、語言模型）、relay（作答傳送）、
                   quiz、board（黑板與繪圖）、visual、docs、tools（工具與設定）、commands、main
   vendor/         qrcode-generator（MIT）、JSZip（MIT）
+  js/local.js     連接 Windows 本機版（沒有本機版時不作用）
+windows/
+  啟動小安.bat     雙擊啟動
+  xiaoan_local.py 本機助手（只用 Python 內建模組）：PowerPoint、Word 檔、Spotify、R
 ```

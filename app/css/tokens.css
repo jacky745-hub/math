@@ -1,0 +1,65 @@
+/* 小安 Xiao-An — generated from tokens.json (design system) */
+:root, [data-theme="light"] {
+  --surface: #f5f3ec;
+  --surface-raised: #ffffff;
+  --surface-sunken: #ebe8de;
+  --line: #d9d5c8;
+  --line-strong: #8c958f;
+  --ink: #1c2621;
+  --ink-muted: #56635c;
+  --brand: #0d7a6a;
+  --on-brand: #ffffff;
+  --brand-soft: #d6ece6;
+  --board: #1f3b33;
+  --chalk: #f3f0e6;
+  --chalk-muted: #b9c7bf;
+  --chalk-yellow: #f2c94c;
+  --holo: #7fd8cf;
+  --spark: #e9a23b;
+  --on-spark: #1c2621;
+  --correct: #2a66ad;
+  --misconception: #b54814;
+  --focus: #c27a00;
+  --shadow-card: 0 1px 2px rgba(28,38,33,0.06), 0 4px 16px rgba(28,38,33,0.06);
+  --shadow-float: 0 12px 32px rgba(15,40,34,0.22);
+}
+[data-theme="dark"] {
+  --surface: #111714;
+  --surface-raised: #1a221e;
+  --surface-sunken: #0c110f;
+  --line: #2c3832;
+  --line-strong: #5d6a63;
+  --ink: #ece9e0;
+  --ink-muted: #a2aea7;
+  --brand: #4cbfac;
+  --on-brand: #0b1714;
+  --brand-soft: #183a33;
+  --board: #1a3a30;
+  --chalk: #f3f0e6;
+  --chalk-muted: #a9b8b0;
+  --chalk-yellow: #f2c94c;
+  --holo: #7fd8cf;
+  --spark: #f0b452;
+  --on-spark: #1c2621;
+  --correct: #7eb0ea;
+  --misconception: #f08b57;
+  --focus: #f0b452;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-float: 0 12px 32px rgba(0,0,0,0.55);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-chalk: "LXGW WenKai TC", "Kaiti TC", "DFKai-SB", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}

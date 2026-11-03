@@ -73,6 +73,20 @@
         h("div", { class: "side-head" }, h("b", null, "和小安對話"), h("span", { class: "xa-caption" }, XA.hasLLM() ? "已連上語言模型" : "離線指令模式")),
         h("div", { class: "log", id: "log", "aria-live": "polite" }), chips, form));
     document.body.appendChild(app);
+    /* narrow screens: the assistant becomes a drawer on the right, opened by a floating button */
+    var side = app.querySelector(".side");
+    function setDrawer(open) { side.classList.toggle("open", open); fab.setAttribute("aria-expanded", open ? "true" : "false"); if (open) input.focus(); }
+    var fab = h("button", { class: "side-fab", "aria-label": "和小安對話", "aria-expanded": "false", onclick: function () { setDrawer(!side.classList.contains("open")); } }, "安");
+    side.querySelector(".side-head").appendChild(h("button", { class: "iconbtn side-close", "aria-label": "關閉對話", onclick: function () { setDrawer(false); } }, "✕"));
+    document.body.appendChild(fab);
+    XA.openChat = function () { setDrawer(true); };
+    var say = XA.say;
+    XA.say = function (text, actions) {
+      say(text, actions);
+      if (window.matchMedia("(max-width: 900px)").matches && !side.classList.contains("open")) {
+        var t = String(text); XA.toast(t.length > 70 ? t.slice(0, 70) + "…" : t, [{ label: "打開對話", variant: "quiet", run: XA.openChat }]);
+      }
+    };
     XA.on("settings", function () { var s = app.querySelector(".side-head .xa-caption"); s.textContent = XA.hasLLM() ? "已連上語言模型" : "離線指令模式"; });
   }
 

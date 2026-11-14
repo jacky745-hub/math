@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block body %}<h2>帳號管理</h2>
+<p class="hint">admin 可剔除任何管理者、教師、學生並變更身分；管理者可剔除教師與學生。剔除帳號不會刪除已上傳的概念圖與評分紀錄。</p>
+<div class="tablewrap"><table><tr><th>帳號</th><th>姓名</th><th>身分</th><th>校名／班級／座號</th><th>註冊時間</th><th>操作</th></tr>
+{% for u in users %}<tr><td>{{ u.username }}</td><td>{{ u.name }}</td><td>
+{% if me.role=='admin' and u.id != me.id %}<form class="inline" method="post" action="{{ url_for('admin.user_role', uid=u.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}">
+<select name="role" onchange="this.form.submit()" style="width:auto">{% for r in ROLES %}<option value="{{ r }}" {{ 'selected' if u.role==r }}>{{ ROLE_LABEL[r] }}</option>{% endfor %}</select></form>
+{% else %}<span class="tag">{{ u.role_label }}</span>{% endif %}</td>
+<td>{{ u.school }} {{ u.class_name }} {{ u.seat_no }}</td><td class="num">{{ u.created_at.strftime('%Y-%m-%d') }}</td><td style="white-space:nowrap">
+{% if u.id != me.id and (me.role=='admin' or u.rank < me.rank) %}
+<form class="inline" method="post" action="{{ url_for('admin.user_reset', uid=u.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input name="password" placeholder="新密碼" style="width:110px"><button class="btn ghost sm">重設密碼</button></form>
+<form class="inline" method="post" action="{{ url_for('admin.user_delete', uid=u.id) }}" onsubmit="return confirm('確定剔除 {{ u.username }}？')"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn danger sm">剔除</button></form>
+{% else %}<span class="hint">—</span>{% endif %}</td></tr>{% endfor %}</table></div>{% endblock %}

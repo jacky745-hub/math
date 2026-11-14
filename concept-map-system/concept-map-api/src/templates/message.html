@@ -1,0 +1,2 @@
+{% extends "base.html" %}{% block body %}<div class="card"><h2>{{ title }}</h2><p>{{ msg }}</p>
+<a class="btn" href="{{ url_for('front.home') }}">回首頁</a> <a class="btn ghost" href="javascript:history.back()">回上一頁</a></div>{% endblock %}

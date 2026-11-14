@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block body %}
+<div class="card"><h2>一組同學、一份文本、每人一種顏色</h2>
+<p>同組同學在同一個頁面上傳：<b>概念圖文本</b>、每個人用單一顏色畫的<b>個人概念圖</b>，以及全組一起畫的<b>協作概念圖</b>。
+系統依 Novak 概念圖評分準則（關係 1 分、階層 5 分、例子 1 分、交叉連結 10 分）並對照文本評分，計算每個人的<b>個人貢獻值</b>，給你一份專屬的回饋。</p>
+<p><a class="btn" href="{{ url_for('auth.login') }}">登入</a> <a class="btn ghost" href="{{ url_for('auth.register') }}">第一次使用？註冊帳號</a></p></div>
+<div class="grid">
+ <div class="card"><h3>① 上傳</h3><p class="hint">校名、班級只填一次；每位組員填座號、姓名、顏色並選自己的圖。支援 PDF 與各種圖檔。</p></div>
+ <div class="card"><h3>② 評分</h3><p class="hint">每一條連結、每一個階層、例子、交叉連結都對照文本判讀；圖上沒畫的不會給分。</p></div>
+ <div class="card"><h3>③ 回饋</h3><p class="hint">看得到哪裡做得好、哪裡卡住、下一步怎麼改；修改後可再上傳，比較自己的進步。</p></div>
+</div>{% endblock %}

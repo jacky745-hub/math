@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% macro table(sc) %}<div class="tablewrap"><table><tr><th>項目</th><th>得分細節</th><th>得分</th><th>說明</th></tr>
+{% for r in sc.detail %}<tr><td><b>{{ r['項目'] }}</b></td><td class="pre">{{ r['得分細節'] }}</td><td class="num">{{ r['得分'] }}</td><td class="pre">{{ r['說明'] }}</td></tr>{% endfor %}</table></div>{% endmacro %}
+{% block body %}
+{% set sm = sub.summary %}
+<h2>#{{ sub.id }}　{{ sub.school }} {{ sub.class_name }} {{ sub.group_name }}</h2>
+<p>文本：<b>{{ sub.text.title }}</b>{% if sub.text.file_path %}（<a href="{{ url_for('front.file', sid=sub.id, which='text') }}" target="_blank">原始檔</a>）{% endif %}
+　上傳：{{ sub.created_at.strftime('%Y-%m-%d %H:%M') }}　
+<span class="tag {{ 'ok' if sub.status=='scored' else 'warn' }}">{{ {'scored':'已評分','pending':'待判讀','scoring':'評分中','error':'待處理'}[sub.status] }}</span>
+{% if sub.engine %}<span class="tag">判讀：{{ sub.engine }}</span>{% endif %}</p>
+<p class="noprint">
+<form class="inline noprint" method="post" action="{{ url_for('front.rescore', sid=sub.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn ghost sm">重新評分</button></form>
+{% if me.rank >= 1 %}<a class="btn ghost sm" href="{{ url_for('admin.analysis', sid=sub.id) }}">判讀匯入／修正</a>{% endif %}
+<a class="btn ghost sm" href="javascript:window.print()">列印／存成 PDF</a></p>
+{% if sub.status != 'scored' %}<div class="card"><p>{{ sub.status_msg }}</p>
+{% if sub.status == 'scoring' %}<p class="hint">頁面每 8 秒自動更新。</p><script>setTimeout(()=>location.reload(),8000)</script>{% endif %}</div>{% endif %}
+
+<div class="card"><h3>組員與原始檔案</h3><div class="tablewrap"><table><tr><th>座號</th><th>姓名</th><th>顏色</th><th>個人概念圖</th>{% if sub.status=='scored' %}<th>個人圖總分</th><th>協作貢獻分</th><th>公式一</th><th>公式二</th><th>公式三</th><th>類型</th>{% endif %}</tr>
+{% for m in sub.members %}{% set c = con.get(m.id) %}<tr><td class="num">{{ m.seat_no }}</td><td>{{ m.name }}</td><td>{{ m.color }}</td>
+<td><a href="{{ url_for('front.file', sid=sub.id, which=m.id) }}" target="_blank">{{ m.file_name }}</a>{% if m.page != 1 %}（第 {{ m.page }} 頁）{% endif %}</td>
+{% if sub.status=='scored' and c %}<td class="num">{{ '%g'|format(c.individual_score) }}</td><td class="num">{{ '%g'|format(c.collab_score) }}</td><td class="num">{{ c.f1 }}%</td><td class="num">{{ c.f2 }}%</td><td class="num">{{ c.f3 }}%</td><td>{{ c.role_type }}</td>{% endif %}</tr>{% endfor %}
+</table></div><p>協作概念圖：<a href="{{ url_for('front.file', sid=sub.id, which='collab') }}" target="_blank">{{ sub.collab_name }}</a></p>
+{% if sub.status=='scored' %}<p class="hint">個人圖平均 {{ sm.P_mean }} 分；協作圖原始分 {{ sm.T_raw }} 分，含補登後 {{ sm.T_adj }} 分；標準分數 {{ '%g'|format(sm.standard) }} 分；補登係數 {{ sm.supplement_coef }}。<br>
+公式一＝(個人×0.6＋協作貢獻×0.4)÷協作圖總分(含補登)；公式二＝[(協作貢獻÷個人)＋(個人÷全組平均)]÷2；公式三＝(個人×0.4＋協作貢獻×0.6＋協作效益加成)÷標準分數。</p>{% endif %}</div>
+
+{% if sub.status=='scored' %}
+{% for m in sub.members %}{% if not only or only == m.seat_no %}{% set sc = ind.get(m.id) %}{% set c = con.get(m.id) %}
+<div class="card"><h3>座號 {{ m.seat_no }}　{{ m.name }}　<span class="tag">{{ m.color }}</span>　個人概念圖：{{ '%g'|format(sc.total) }} 分</h3>
+{{ table(sc) }}
+<h3>給 {{ m.name or '你' }} 的回饋（個人概念圖）</h3><div class="fb">{{ sc.feedback }}</div>
+{% if c %}<h3>個人貢獻值</h3>
+<div class="tablewrap"><table><tr><th>維度</th><th>D1 概念數量</th><th>D2 關係鏈品質</th><th>D3 層次構建</th><th>D4 交叉創新</th><th>D5 實例準確性</th><th>協作個人貢獻分數</th></tr>
+<tr><td>數量</td><td class="num">{{ '%g'|format(c.d_concepts) }}</td><td class="num">{{ '%g'|format(c.d_relations) }}</td><td class="num">{{ '%g'|format(c.d_hierarchy) }}</td><td class="num">{{ '%g'|format(c.d_cross) }}</td><td class="num">{{ '%g'|format(c.d_examples) }}</td><td class="num" rowspan="2"><b>{{ '%g'|format(c.collab_score) }}</b></td></tr>
+<tr><td>權重</td><td class="num">× {{ '%g'|format(sm.weights.w_concepts) }}</td><td class="num">× {{ '%g'|format(sm.weights.w_relations) }}</td><td class="num">× {{ '%g'|format(sm.weights.w_hierarchy) }}</td><td class="num">× {{ '%g'|format(sm.weights.w_cross) }}</td><td class="num">× {{ '%g'|format(sm.weights.w_examples) }}</td></tr></table></div>
+{% set d = c.detail %}<p class="hint">協作圖上親筆：概念 {{ d.authored.nodes|length }}、連結 {{ d.authored.relations|length }}、例子 {{ d.authored.examples|length }}、交叉 {{ d.authored.cross|length }}；圈選認同 {{ d.rings|length }}；
+補登：概念 {{ d.supplement.nodes|length }}、連結 {{ d.supplement.relations|length }}、例子 {{ d.supplement.examples|length }}、交叉 {{ d.supplement.cross|length }}。</p>
+<div class="fb">{{ c.feedback_f1 }}</div><div class="fb">{{ c.feedback_f2 }}</div><div class="fb">{{ c.feedback_f3 }}</div><div class="fb">{{ c.feedback_guidance }}</div>{% endif %}
+</div>{% endif %}{% endfor %}
+{% if collab %}<div class="card"><h3>協作概念圖：{{ '%g'|format(collab.total) }} 分（依圖上實際畫出的內容）</h3>{{ table(collab) }}</div>{% endif %}
+{% endif %}{% endblock %}

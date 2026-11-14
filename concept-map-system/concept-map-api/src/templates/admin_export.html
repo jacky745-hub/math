@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block body %}<h2>資料下載</h2>
+<div class="card"><h3>全部資料（Excel，一個檔案多個工作表）</h3>
+<p><a class="btn" href="{{ url_for('admin.export_xlsx') }}">下載 conceptmap_all.xlsx</a></p>
+<p class="hint">工作表：小組、個人與協作圖評分、評分細節（項目／得分細節／得分／說明）、貢獻值（五維度、三公式、回饋）、使用者。適合直接匯入 SPSS／R／Excel 做統計分析。</p></div>
+<div class="card"><h3>單一資料表（CSV，UTF-8，可用 Excel 直接開啟）</h3>
+<p>{% for k, name in EXPORTS.items() %}{% if k != 'users' or me.rank >= 2 %}<a class="btn ghost" href="{{ url_for('admin.export_csv', kind=k) }}">{{ name }}.csv</a> {% endif %}{% endfor %}</p></div>
+<div class="card"><h3>原始檔案與判讀紀錄</h3>
+<p><a class="btn ghost" href="{{ url_for('admin.export_files') }}">所有上傳的概念圖原始檔（ZIP）</a> <a class="btn ghost" href="{{ url_for('admin.export_analysis') }}">逐項判讀紀錄（JSON）</a></p>
+<p class="hint">判讀紀錄保存每張圖逐條連結／階層／例子／交叉連結的判定與理由，可供信度檢核。</p></div>{% endblock %}

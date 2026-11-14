@@ -1,0 +1,12 @@
+# Render.com 一鍵部署（需付費方案才有持久磁碟；免費方案重啟後上傳檔與 SQLite 會消失）
+services:
+  - type: web
+    name: concept-map-system
+    runtime: docker
+    rootDir: concept-map-api
+    healthCheckPath: /healthz
+    disk: {name: data, mountPath: /data, sizeGB: 5}
+    envVars:
+      - {key: ADMIN_PASSWORD, sync: false}
+      - {key: ANTHROPIC_API_KEY, sync: false}
+      - {key: SECRET_KEY, generateValue: true}

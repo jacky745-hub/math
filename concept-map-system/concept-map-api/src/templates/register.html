@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block body %}<div class="card" style="max-width:640px"><h2>註冊</h2>
+<form method="post"><input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="grid"><div><label>身分</label><select name="role" id="role" onchange="document.getElementById('tc').style.display=this.value=='teacher'?'block':'none'">
+<option value="student">學生</option><option value="teacher" {{ 'selected' if form.get('role')=='teacher' }}>教師</option></select></div>
+<div><label>帳號（至少 3 字元）</label><input name="username" value="{{ form.get('username','') }}" required></div>
+<div><label>姓名</label><input name="name" value="{{ form.get('name','') }}"></div></div>
+<div class="grid"><div><label>密碼（至少 6 字元）</label><input name="password" type="password" required></div>
+<div><label>再輸入一次密碼</label><input name="password2" type="password" required></div></div>
+<div class="grid"><div><label>校名</label><input name="school" value="{{ form.get('school','') }}"></div>
+<div><label>班級</label><input name="class_name" value="{{ form.get('class_name','') }}"></div>
+<div><label>座號（學生）</label><input name="seat_no" value="{{ form.get('seat_no','') }}"></div></div>
+<div id="tc" style="display:{{ 'block' if form.get('role')=='teacher' else 'none' }}"><label>教師註冊碼</label><input name="teacher_code"></div>
+<p class="hint">管理者與 admin 身分由 admin 於後台指派。</p>
+<p><button class="btn">註冊</button> <a class="btn ghost" href="{{ url_for('auth.login') }}">已有帳號，去登入</a></p></form></div>{% endblock %}

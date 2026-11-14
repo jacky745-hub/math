@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block body %}<h2>判讀匯入／修正　#{{ sub.id }} {{ sub.school }} {{ sub.class_name }} {{ sub.group_name }}</h2>
+<div class="card"><p>這裡是每張圖的「逐項判讀」資料（JSON）。分數完全由這份判讀依 Novak 標準計算而得。
+教師可以：下載 → 對照原圖修改（例如把誤判的連結 valid 改成 false）→ 貼回或上傳 → 系統重新計分。</p>
+<p class="hint">組員座號：{% for m in sub.members %}{{ m.seat_no }}（{{ m.color }}）{{ '、' if not loop.last }}{% endfor %}。
+relations 每筆：a、b、label（連接詞）、valid、level（子概念所在階層，非從屬關係填 null）、owner（協作圖上是誰畫的）、note。</p>
+<p><a class="btn ghost sm" href="{{ url_for('admin.analysis_download', sid=sub.id) }}">下載目前判讀 JSON</a> <a class="btn ghost sm" href="{{ url_for('front.submission', sid=sub.id) }}">回評分結果</a></p></div>
+<form method="post" enctype="multipart/form-data" class="card"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>上傳判讀 JSON 檔</label><input type="file" name="bundle_file" accept=".json">
+<label>或直接編輯</label><textarea name="bundle" class="mono" style="min-height:420px" spellcheck="false">{{ bundle }}</textarea>
+<p><button class="btn">匯入並重新計分</button></p></form>{% endblock %}

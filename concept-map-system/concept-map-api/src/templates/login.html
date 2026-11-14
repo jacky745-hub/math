@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block body %}<div class="card" style="max-width:440px"><h2>登入</h2>
+<form method="post"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>帳號</label><input name="username" required autofocus><label>密碼</label><input name="password" type="password" required>
+<p><button class="btn">登入</button> <a class="btn ghost" href="{{ url_for('auth.register') }}">註冊新帳號</a></p></form></div>{% endblock %}

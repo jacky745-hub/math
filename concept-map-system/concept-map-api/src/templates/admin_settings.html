@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block body %}<h2>系統設定</h2>
+<form method="post" class="card"><input type="hidden" name="csrf" value="{{ csrf }}">
+<h3>貢獻值五維度權重（貢獻值 = Σ wᵢ · Dimensionᵢ）</h3><div class="grid">
+<div><label>w₁ 概念數量</label><input name="w_concepts" value="{{ s.w_concepts }}"></div><div><label>w₂ 關係鏈品質</label><input name="w_relations" value="{{ s.w_relations }}"></div>
+<div><label>w₃ 層次構建</label><input name="w_hierarchy" value="{{ s.w_hierarchy }}"></div><div><label>w₄ 交叉創新</label><input name="w_cross" value="{{ s.w_cross }}"></div>
+<div><label>w₅ 實例準確性</label><input name="w_examples" value="{{ s.w_examples }}"></div></div>
+<h3>補登與圈選</h3><div class="grid">
+<div><label>補登係數（個人圖有、協作圖沒呈現的內容，以幾成計入貢獻；1＝全額）</label><input name="supplement_coef" value="{{ s.supplement_coef }}"></div>
+<div><label>圈選係數（用自己的顏色圈起別人寫的概念，每個算幾個概念）</label><input name="ring_coef" value="{{ s.ring_coef }}"></div>
+<div><label>公式三的標準分數（留空＝使用該文本標準參考圖的分數）</label><input name="standard_score" value="{{ s.standard_score }}"></div></div>
+<h3>註冊</h3><label>教師註冊碼（留空＝不開放自行註冊為教師，需由 admin 升級）</label><input name="teacher_code" value="{{ s.teacher_code }}">
+<p><button class="btn">儲存設定</button></p></form>
+<div class="card"><p>AI 判讀引擎：{% if ai_ready %}<span class="tag ok">已啟用（{{ model }}）</span>{% else %}<span class="tag warn">未設定 ANTHROPIC_API_KEY</span>{% endif %}</p>
+<p class="hint">Novak 計分標準固定為：關係 1 分、階層 5 分、例子 1 分、交叉連結 10 分，不開放修改，以維持跨次評分的一致性。</p></div>{% endblock %}

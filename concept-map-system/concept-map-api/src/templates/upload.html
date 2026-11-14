@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block body %}
+<h2>上傳小組概念圖</h2>
+<p class="hint">同組同學請在這一頁一起完成。校名、班級只填一次；每位組員各填一列。<b>幾位組員就有幾種顏色</b>，個人圖用的顏色要和協作圖上的顏色相同。</p>
+<form method="post" enctype="multipart/form-data" id="f"><input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="card"><h3>① 小組資料（全組共用）</h3><div class="grid">
+<div><label>校名 *</label><input name="school" required value="{{ form.get('school', me.school) }}"></div>
+<div><label>班級 *</label><input name="class_name" required value="{{ form.get('class_name', me.class_name) }}"></div>
+<div><label>組別（可不填）</label><input name="group_name" value="{{ form.get('group_name','') }}" placeholder="例：A 組"></div></div></div>
+
+<div class="card"><h3>② 概念圖文本（評分依據）</h3>
+<p class="hint">請提供同學們畫概念圖時所讀的文本。三種方式擇一：選用已上傳的文本、直接貼上文字、或上傳檔案。</p>
+{% if texts %}<label>選用已有的文本</label><select name="text_id"><option value="">— 不選用，改用下方貼上或上傳 —</option>
+{% for t in texts %}<option value="{{ t.id }}" {{ 'selected' if form.get('text_id')==t.id|string }}>{{ t.title }}（{{ t.created_at.strftime('%Y-%m-%d') }}）</option>{% endfor %}</select>{% endif %}
+<label>文本標題</label><input name="text_title" value="{{ form.get('text_title','') }}">
+<label>貼上文本內容（建議，評分最準確）</label><textarea name="text_content">{{ form.get('text_content','') }}</textarea>
+<label>或上傳文本檔案（PDF、Word、圖片、TXT）</label><input type="file" name="text_file"></div>
+
+<div class="card"><h3>③ 組員與個人概念圖（每人單一顏色）</h3>
+<div id="members"></div>
+<p><button type="button" class="btn ghost" id="add">＋ 新增一位組員</button></p>
+<details><summary>個人圖是「整組掃描成同一個 PDF」嗎？</summary>
+<p class="hint">可在這裡上傳合併檔，並在每位組員的「頁碼」填他在第幾頁；組員列的檔案欄就可以留空。</p>
+<input type="file" name="shared_file"></details></div>
+
+<div class="card"><h3>④ 協作概念圖（全組一起畫、含所有組員的顏色）</h3>
+<div class="grid"><div><label>協作概念圖檔案 *</label><input type="file" name="collab_file" required></div>
+<div><label>頁碼（多頁 PDF 才需要）</label><input name="collab_page" type="number" min="1" value="1"></div></div></div>
+<p><button class="btn" id="go">上傳並評分</button> <span class="hint" id="wait" style="display:none">上傳中，請稍候不要關閉頁面…</span></p>
+</form>
+<template id="row"><div class="member"><div class="grid">
+<div><label>座號 *</label><input name="seat_no" inputmode="numeric"></div><div><label>姓名</label><input name="name"></div>
+<div><label>顏色 *</label><input name="color" list="colors" placeholder="例：紅"></div>
+<div><label>個人概念圖檔案</label><input type="file" name="member_file"></div>
+<div><label>頁碼</label><input name="page" type="number" min="1" value="1"></div>
+<div style="align-self:end"><button type="button" class="btn danger sm rm">移除這位</button></div></div></div></template>
+<datalist id="colors">{% for c in ['紅','橘','粉橘','黃','綠','淺綠','藍','淺藍','紫','粉紅','咖啡','黑','灰'] %}<option value="{{ c }}">{% endfor %}</datalist>
+<script>
+const box=document.getElementById('members'),tpl=document.getElementById('row');
+function add(){const n=tpl.content.cloneNode(true);n.querySelector('.rm').onclick=e=>{if(box.children.length>2)e.target.closest('.member').remove();else alert('協作概念圖至少需要 2 位組員。')};box.appendChild(n)}
+document.getElementById('add').onclick=add;for(let i=0;i<4;i++)add();
+document.getElementById('f').onsubmit=()=>{document.getElementById('go').disabled=true;document.getElementById('wait').style.display='inline'};
+</script>{% endblock %}

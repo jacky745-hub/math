@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block body %}<div class="card" style="max-width:640px"><h2>我的帳號</h2>
+<p>帳號：<b>{{ me.username }}</b>　身分：<span class="tag">{{ me.role_label }}</span></p>
+<form method="post"><input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="grid"><div><label>姓名</label><input name="name" value="{{ me.name }}"></div><div><label>校名</label><input name="school" value="{{ me.school }}"></div>
+<div><label>班級</label><input name="class_name" value="{{ me.class_name }}"></div><div><label>座號</label><input name="seat_no" value="{{ me.seat_no }}"></div></div>
+<h3>修改密碼（不改請留空）</h3><div class="grid"><div><label>目前密碼</label><input name="old_password" type="password"></div>
+<div><label>新密碼</label><input name="new_password" type="password"></div></div>
+<p><button class="btn">儲存</button></p></form></div>{% endblock %}
